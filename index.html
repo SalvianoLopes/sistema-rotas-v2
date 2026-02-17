@@ -3,26 +3,88 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" href="/favicon.ico" />
   <title>Sistema de Rotas V2.0 - CORRIGIDO FINAL</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
   <style>
     .card-hover { transition: all 0.2s; }
     .card-hover:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-    .tab-btn { padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; background: transparent; color: #94a3b8; border: none; cursor: pointer; }
-    .tab-btn.active { background: linear-gradient(135deg, #10b981, #059669); color: white; }
-    .tipo-rota-btn { padding: 1.5rem; border-radius: 0.75rem; border: 2px solid #334155; background: #0f172a; text-align: center; transition: all 0.2s; cursor: pointer; }
-    .tipo-rota-btn.active { border-color: #10b981; background: linear-gradient(135deg, #10b981, #059669); }
-    .tipo-rota-btn:hover:not(.active) { border-color: #475569; transform: translateY(-2px); }
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
-    .modal.show { display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease-in; }
+
+    .tab-btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      background: transparent;
+      color: #94a3b8;
+      border: none;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+    }
+
+    .tipo-rota-btn {
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      border: 2px solid #334155;
+      background: #0f172a;
+      text-align: center;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .tipo-rota-btn.active {
+      border-color: #10b981;
+      background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .tipo-rota-btn:hover:not(.active) {
+      border-color: #475569;
+      transform: translateY(-2px);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.8);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s ease-in;
+    }
+
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .modal-content { background: linear-gradient(135deg, #0f172a, #1e293b); border: 1px solid #334155; border-radius: 1rem; padding: 2rem; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease-out; }
+
+    .modal-content {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      border: 1px solid #334155;
+      border-radius: 1rem;
+      padding: 2rem;
+      max-width: 900px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease-out;
+    }
+
     @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    .status-badge-aberto { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
-    .status-badge-fechado { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
-    .heatmap-cell { width: 80px; height: 80px; margin: 4px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-direction: column; transition: all 0.2s; }
   </style>
 </head>
 <body class="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 min-h-screen">
@@ -35,7 +97,7 @@
       </div>
       <div id="userInfo" class="hidden flex items-center gap-4">
         <span id="userEmail" class="text-sm font-semibold"></span>
-        <button id="btnLogout" class="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-500">Sair</button>
+        <button id="btnLogout" class="px-4 py-2 bg-red-600 rounded-lg hover:bg-red-500 transition">Sair</button>
       </div>
     </header>
 
@@ -45,17 +107,25 @@
     </div>
 
     <section id="loginCard" class="max-w-md mx-auto bg-slate-900/50 border border-slate-800 rounded-xl p-8 space-y-4">
-      <h2 class="text-2xl font-bold">Acesso</h2>
-      <input id="loginEmail" type="email" placeholder="Email" class="w-full p-3 rounded bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none" />
-      <input id="loginPassword" type="password" placeholder="Senha" class="w-full p-3 rounded bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none" />
-      <div class="flex gap-2">
-        <button id="btnLogin" class="flex-1 p-3 bg-emerald-600 rounded font-bold">Entrar</button>
-        <button id="btnSignup" class="flex-1 p-3 bg-slate-700 rounded font-bold">Cadastrar</button>
+      <h2 class="text-2xl font-bold text-center">Acesso Restrito</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm text-slate-400 mb-1">E-mail</label>
+          <input id="loginEmail" type="email" placeholder="seu@email.com" class="w-full p-3 rounded bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none transition" />
+        </div>
+        <div>
+          <label class="block text-sm text-slate-400 mb-1">Senha</label>
+          <input id="loginPassword" type="password" placeholder="••••••••" class="w-full p-3 rounded bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none transition" />
+        </div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button id="btnLogin" class="flex-1 p-3 bg-emerald-600 hover:bg-emerald-500 rounded font-bold transition">Entrar</button>
+        <button id="btnSignup" class="flex-1 p-3 bg-slate-700 hover:bg-slate-600 rounded font-bold transition">Cadastrar</button>
       </div>
     </section>
 
     <main id="appCard" class="hidden space-y-6">
-      <nav class="flex gap-2">
+      <nav class="flex gap-2 bg-slate-900/30 p-2 rounded-lg border border-slate-800 inline-flex">
         <button id="tabOperacional" class="tab-btn active">📦 Operacional</button>
         <button id="tabCadastros" class="tab-btn">📋 Cadastros</button>
         <button id="tabAnalytics" class="tab-btn">📊 Analytics</button>
@@ -65,28 +135,28 @@
         <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-6">
           <h2 class="text-xl font-bold mb-4">Nova Rota</h2>
           <div class="grid md:grid-cols-4 gap-4 mb-4">
-            <input id="rotaData" type="date" class="p-3 rounded bg-slate-950 border border-slate-800" />
-            <select id="rotaSoc" class="p-3 rounded bg-slate-950 border border-slate-800">
+            <input id="rotaData" type="date" class="p-3 rounded bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none" />
+            <select id="rotaSoc" class="p-3 rounded bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none">
                 <option value="SP2">SP2</option><option value="SP6">SP6</option>
                 <option value="SP7">SP7</option><option value="SP8">SP8</option>
                 <option value="RJ2">RJ2</option>
             </select>
-            <select id="rotaOperacao" class="p-3 rounded bg-slate-950 border border-slate-800">
+            <select id="rotaOperacao" class="p-3 rounded bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none">
                 <option value="SP_CAPITAL">SP Capital</option>
                 <option value="SP_INTERIOR">SP Interior</option>
                 <option value="RJ">RJ</option>
             </select>
-            <input id="motoristaSearch" list="motoristasList" placeholder="Motorista..." class="p-3 rounded bg-slate-950 border border-slate-800" />
+            <input id="motoristaSearch" list="motoristasList" placeholder="🔍 Buscar Motorista..." class="p-3 rounded bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none" />
             <datalist id="motoristasList"></datalist>
           </div>
 
           <div class="grid grid-cols-2 gap-4 mb-6">
-            <button id="btnRotaSimples" class="tipo-rota-btn active">Rota Simples</button>
-            <button id="btnMilkRun" class="tipo-rota-btn">Milk Run</button>
+            <button id="btnRotaSimples" class="tipo-rota-btn active">📦 Rota Simples</button>
+            <button id="btnMilkRun" class="tipo-rota-btn">🔄 Milk Run</button>
           </div>
 
           <div id="rotaSimplesForm" class="space-y-4">
-            <select id="simplesSellerDop" class="w-full p-3 rounded bg-slate-950 border border-slate-800"></select>
+            <select id="simplesSellerDop" class="w-full p-3 rounded bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none"></select>
             <div class="grid grid-cols-3 gap-4">
                 <input id="simplesFrete" type="number" placeholder="Frete R$" class="p-3 rounded bg-slate-950 border border-slate-800" />
                 <input id="simplesVolume" type="number" placeholder="Volume" class="p-3 rounded bg-slate-950 border border-slate-800" />
@@ -95,12 +165,12 @@
           </div>
 
           <div id="milkRunForm" class="hidden space-y-4">
-            <input id="milkRunFrete" type="number" placeholder="Frete Total R$" class="w-full p-3 rounded bg-slate-950 border border-slate-800" />
+            <input id="milkRunFrete" type="number" placeholder="Frete Total R$ (Rateado por volume)" class="w-full p-3 rounded bg-slate-950 border border-slate-800" />
             <div id="stopsContainer" class="space-y-2"></div>
-            <button id="btnAddStop" class="p-2 bg-emerald-600 rounded">+ Adicionar Stop</button>
+            <button id="btnAddStop" class="p-2 bg-emerald-600 hover:bg-emerald-500 rounded transition">+ Adicionar Stop</button>
           </div>
 
-          <button id="btnCriarRota" class="w-full mt-6 p-4 bg-emerald-600 rounded-xl font-bold text-lg">✅ Salvar Rota</button>
+          <button id="btnCriarRota" class="w-full mt-6 p-4 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold text-lg transition shadow-lg shadow-emerald-900/20">✅ Salvar Rota</button>
         </div>
 
         <div id="rotasList" class="space-y-4"></div>
@@ -108,21 +178,21 @@
 
       <section id="pageAnalytics" class="hidden space-y-6">
         <div class="grid md:grid-cols-4 gap-4">
-          <div class="bg-emerald-600 p-6 rounded-xl"><p>Receita Total</p><h3 id="kpiReceitaTotal" class="text-2xl font-bold">R$ 0,00</h3></div>
-          <div class="bg-amber-600 p-6 rounded-xl"><p>Custo Frete</p><h3 id="kpiFreteTotal" class="text-2xl font-bold">R$ 0,00</h3></div>
-          <div class="bg-cyan-600 p-6 rounded-xl"><p>% Custo Médio</p><h3 id="kpiCustoMedio" class="text-2xl font-bold">0%</h3></div>
-          <div class="bg-purple-600 p-6 rounded-xl"><p>Total Rotas</p><h3 id="kpiTotalRotas" class="text-2xl font-bold">0</h3></div>
+          <div class="bg-gradient-to-br from-emerald-600 to-emerald-700 p-6 rounded-xl shadow-lg"><p class="text-emerald-100 text-sm">Receita Total</p><h3 id="kpiReceitaTotal" class="text-2xl font-bold">R$ 0,00</h3></div>
+          <div class="bg-gradient-to-br from-amber-600 to-amber-700 p-6 rounded-xl shadow-lg"><p class="text-amber-100 text-sm">Custo Frete</p><h3 id="kpiFreteTotal" class="text-2xl font-bold">R$ 0,00</h3></div>
+          <div class="bg-gradient-to-br from-cyan-600 to-cyan-700 p-6 rounded-xl shadow-lg"><p class="text-cyan-100 text-sm">% Custo Médio</p><h3 id="kpiCustoMedio" class="text-2xl font-bold">0%</h3></div>
+          <div class="bg-gradient-to-br from-purple-600 to-purple-700 p-6 rounded-xl shadow-lg"><p class="text-purple-100 text-sm">Total Rotas</p><h3 id="kpiTotalRotas" class="text-2xl font-bold">0</h3></div>
         </div>
         <div class="grid md:grid-cols-2 gap-6">
-            <div class="bg-slate-900 p-6 rounded-xl h-80"><canvas id="chartEvolucao"></canvas></div>
-            <div class="bg-slate-900 p-6 rounded-xl h-80"><canvas id="chartMotoristas"></canvas></div>
+            <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl h-80"><canvas id="chartEvolucao"></canvas></div>
+            <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-xl h-80"><canvas id="chartMotoristas"></canvas></div>
         </div>
       </section>
     </main>
   </div>
 
   <script>
-    // --- CONFIGURAÇÃO SUPABASE (ALTERADO PARA VARIÁVEIS DE AMBIENTE) ---
+    // --- CONFIGURAÇÃO SUPABASE (VARIÁVEIS DE AMBIENTE) ---
     const SUPABASE_URL = "%PUBLIC_SUPABASE_URL%";
     const SUPABASE_ANON_KEY = "%PUBLIC_SUPABASE_ANON_KEY%";
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -130,7 +200,7 @@
     const $ = id => document.getElementById(id);
     let cachedDrivers = [], cachedSellers = [], cachedRotas = [], selectedDriver = null, isMilkRun = false;
 
-    // --- LOGICA DE NEGÓCIO ---
+    // --- REGRAS DE NEGÓCIO ---
     function getTaxa(soc, dop) {
         const d = parseInt(dop);
         if (d === 1466) return 0.74; // Limeira
@@ -144,17 +214,16 @@
         $("appCard").classList.remove("hidden");
         $("userInfo").classList.remove("hidden");
         $("userEmail").textContent = user.email;
-        setStatus("Dados Carregados", "Pronto", "green");
+        setStatus("Sistema Conectado", "Pronto", "green");
         await Promise.all([loadDrivers(), loadSellers(), loadRotas()]);
         atualizarAnalytics();
     }
 
-    // --- CARREGAMENTO DE DADOS ---
+    // --- CARREGAMENTO ---
     async function loadDrivers() {
         const { data } = await supabaseClient.from("drivers").select("*");
         cachedDrivers = data || [];
-        const dl = $("motoristasList");
-        dl.innerHTML = cachedDrivers.map(d => `<option value="${d.name} | ${d.placa}">${d.name}</option>`).join("");
+        $("motoristasList").innerHTML = cachedDrivers.map(d => `<option value="${d.name} | ${d.placa}">${d.name}</option>`).join("");
     }
 
     async function loadSellers() {
@@ -171,14 +240,14 @@
 
     function renderRotas() {
         $("rotasList").innerHTML = cachedRotas.map(r => `
-            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex justify-between items-center">
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex justify-between items-center card-hover transition">
                 <div>
-                    <h4 class="font-bold">${r.drivers?.name || 'Motorista'} - ${r.data}</h4>
-                    <p class="text-sm text-slate-400">${r.soc} | ${r.is_milk_run ? '🔄 Milk Run' : '📦 Simples'}</p>
+                    <h4 class="font-bold text-emerald-400">${r.drivers?.name || 'Motorista'}</h4>
+                    <p class="text-sm text-slate-400">${r.data} | ${r.soc} | ${r.is_milk_run ? '🔄 Milk Run' : '📦 Simples'}</p>
                 </div>
                 <div class="text-right">
-                    <p class="font-bold text-emerald-400">R$ ${r.frete_total.toFixed(2)}</p>
-                    <p class="text-xs ${r.rentabilidade_pct > 30 ? 'text-red-400' : 'text-emerald-400'}">${r.rentabilidade_pct.toFixed(2)}% Custo</p>
+                    <p class="font-bold text-slate-100">R$ ${r.frete_total.toFixed(2)}</p>
+                    <p class="text-xs ${r.rentabilidade_pct > 30 ? 'text-red-400 font-bold' : 'text-emerald-400'}">${r.rentabilidade_pct.toFixed(2)}% Custo</p>
                 </div>
             </div>
         `).join("");
@@ -186,10 +255,10 @@
 
     // --- ANALYTICS ---
     function atualizarAnalytics() {
-        const receita = cachedRotas.reduce((s, r) => s + r.receita_estimada, 0);
-        const frete = cachedRotas.reduce((s, r) => s + r.frete_total, 0);
-        $("kpiReceitaTotal").textContent = "R$ " + receita.toLocaleString('pt-BR');
-        $("kpiFreteTotal").textContent = "R$ " + frete.toLocaleString('pt-BR');
+        const receita = cachedRotas.reduce((s, r) => s + (r.receita_estimada || 0), 0);
+        const frete = cachedRotas.reduce((s, r) => s + (r.frete_total || 0), 0);
+        $("kpiReceitaTotal").textContent = "R$ " + receita.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+        $("kpiFreteTotal").textContent = "R$ " + frete.toLocaleString('pt-BR', {minimumFractionDigits: 2});
         $("kpiCustoMedio").textContent = (receita > 0 ? (frete/receita)*100 : 0).toFixed(2) + "%";
         $("kpiTotalRotas").textContent = cachedRotas.length;
     }
@@ -197,12 +266,11 @@
     // --- UI CONTROLS ---
     function setStatus(t, sub = "", color = "yellow") {
         $("statusText").textContent = t;
-        const dot = $("statusDot");
-        dot.className = `w-3 h-3 rounded-full bg-${color === 'green' ? 'green-400' : 'yellow-400'}`;
+        $("statusDot").className = `w-3 h-3 rounded-full bg-${color === 'green' ? 'green-400' : 'yellow-400'} ${color === 'yellow' ? 'animate-pulse' : ''}`;
     }
 
     function showTab(t) {
-        ["pageOperacional", "pageCadastros", "pageAnalytics"].forEach(p => $(p).classList.add("hidden"));
+        ["pageOperacional", "pageAnalytics"].forEach(p => $(p).classList.add("hidden"));
         $(`page${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.remove("hidden");
         document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
         $(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add("active");
@@ -215,13 +283,15 @@
             password: $("loginPassword").value
         });
         if (data.user) onLoggedIn(data.user);
+        else alert("Erro: " + error.message);
     };
 
+    $("btnLogout").onclick = async () => { await supabaseClient.auth.signOut(); location.reload(); };
     $("tabOperacional").onclick = () => showTab("operacional");
     $("tabAnalytics").onclick = () => showTab("analytics");
 
-    $("btnRotaSimples").onclick = () => { isMilkRun = false; $("rotaSimplesForm").classList.remove("hidden"); $("milkRunForm").classList.add("hidden"); };
-    $("btnMilkRun").onclick = () => { isMilkRun = true; $("rotaSimplesForm").classList.add("hidden"); $("milkRunForm").classList.remove("hidden"); };
+    $("btnRotaSimples").onclick = () => { isMilkRun = false; $("rotaSimplesForm").classList.remove("hidden"); $("milkRunForm").classList.add("hidden"); $("btnRotaSimples").classList.add("active"); $("btnMilkRun").classList.remove("active"); };
+    $("btnMilkRun").onclick = () => { isMilkRun = true; $("rotaSimplesForm").classList.add("hidden"); $("milkRunForm").classList.remove("hidden"); $("btnMilkRun").classList.add("active"); $("btnRotaSimples").classList.remove("active"); };
 
     // --- BOOT ---
     (async () => {
